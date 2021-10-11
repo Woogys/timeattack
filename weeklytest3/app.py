@@ -14,63 +14,69 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/post', methods=['POST'])
+@app.route('/article', methods=['POST'])
 def save_post():
-    title_receive = request.form['title_give']
-    content_receive = request.form['content_give']
+    title = request.form.get('title')
+    content = request.form.get('content')
+    article_count = db.article.count()
+    if article_count == 0:
+        max_value = 1
+    else:
+        max_value = db.article.find_one(sort=[("idx", -1)])['idx'] + 1
 
-    today = datetime.now()
-    date = today.strftime('%Y.%m.%d %H:%M:%S')
-
-    idx = 1
-
-    doc = {
-        'idx': db.memo.count() + 1,
-        'title': title_receive,
-        'content': content_receive,
-        'reg_date': today
+    post = {
+        'idx': max_value,
+        'title': title,
+        'content': content,
+        'read_count': 0,
+        'reg_date': datetime.now()
     }
-
-    db.memo.insert_one(doc)
-
+    db.article.insert_one(post)
     return {"result": "success"}
 
 
-@app.route('/post', methods=['GET'])
-def get_post():
-    all_memos = list(db.memo.find({}, {'_id': False}))
-    print(all_memos)
-    return jsonify({'all_memos': all_memos})
+@app.route('/articles', methods=['GET'])
+def get_posts():
+    order = request.args.get('order')
+    if order == "desc":
+        articles = list(db.article.find({}, {'_id': False}).sort([("read_count", -1)]))
+    else:
+        articles = list(db.article.find({}, {'_id': False}).sort([("reg_date", -1)]))
+
+    for a in articles:
+        a['reg_date'] = a['reg_date'].strftime('%Y.%m.%d %H:%M:%S')
+
+    return jsonify({"articles": articles})
 
 
-@app.route('/post', methods=['DELETE'])
+@app.route('/article', methods=['DELETE'])
 def delete_post():
-    idx = request.form['idx']
-    db.memo.delete_one({'idx': int(idx)})
-
+    idx = request.args.get('idx')
+    db.article.delete_one({'idx': int(idx)})
     return {"result": "success"}
 
 
-@app.route('/post', methods=['POST'])
-def edit_post():
-    title_receive = request.form['title_give']
-    content_receive = request.form['content_give']
+@app.route('/article', methods=['GET'])
+def get_post():
+    idx = request.args['idx']
+    article = db.article.find_one({'idx': int(idx)}, {'_id': False})
+    return jsonify({"article": article})
 
-    today = datetime.now()
-    date = today.strftime('%Y.%m.%d %H:%M:%S')
 
-    idx = 1
-
-    doc = {
-        'idx': db.memo.count() + 1,
-        'title': title_receive,
-        'content': content_receive,
-        'reg_date': today
-    }
-
-    db.memo.update_one(doc)
-
+@app.route('/article', methods=['PUT'])
+def update_post():
+    idx = request.form.get('idx')
+    title = request.form.get('title')
+    content = request.form.get('content')
+    db.article.update_one({'idx': int(idx)}, {'$set': {'title': title, 'content': content}})
     return {"result": "success"}
+
+
+@app.route('/article/<idx>', methods=['PUT'])
+def update_read_count(idx):
+    db.article.update_one({'idx': int(idx)}, {'$inc': {'read_count': 1}})
+    article = db.article.find_one({'idx': int(idx)}, {'_id': False})
+    return jsonify({"article": article})
 
 
 if __name__ == "__main__":
