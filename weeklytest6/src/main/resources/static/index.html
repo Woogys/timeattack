@@ -52,83 +52,37 @@
         }
     </style>
     <script>
-        $(document).ready(function () {
-            // HTML 문서를 로드할 때마다 실행합니다.
-            getMessages();
-        })
-
-        function getMessages() {
-            $('#content').empty();
+        function readMemo() {
+            $('#article').empty();
             $.ajax({
                 type: 'GET',
-                url: '/api/memos',
+                url: '/memo',
+                data: {},
                 success: function (response) {
                     for (let i = 0; i < response.length; i++) {
-                        let message = response[i];
-                        let id = message['id'];
-                        let user = message['user'];
-                        let contents = message['contents'];
-                        let modifiedAt = message['modifiedAt'];
-                        addHTML(id, user, contents, modifiedAt);
+                        let memoDto = response[i];
+                        let tempHtml = `<div>${response[i]['content']}</div>`;
+                        $('#article').append(tempHtml);
                     }
                 }
             })
         }
 
-        // 메모 하나를 HTML로 만들어서 body 태그 내 원하는 곳에 붙이는 메서드
-        function addHTML(id, user, contents, modifiedAt) {
-            // 1. HTML 태그를 만든다
-            let tempHtml = `<div class="card">
-                            <!-- date/username 영역 -->
-                                <div class="metadata">
-                                <div class="date">
-                                ${modifiedAt}
-                                </div>
-                                <div id="${id}-user" class="user">
-                                ${user}
-                                </div>
-                                </div>
-                                    <!-- contents 조회/수정 영역-->
-                                <div class="contents">
-                                <div id="${id}-contents" class="text">
-                                ${contents}
-                                </div>
-                                <div id="${id}-editarea" class="edit">
-                                <textarea id="${id}-textarea" class="te-edit" name="" id="" cols="30" rows="5"></textarea>
-                                </div>
-                                </div>
-                                    <!-- 버튼 영역-->
-                                <button type="button" class="btn btn-primary" onclick="writePost()">Primary</button>
-
-                            </div>`;
-            $('#content').append(tempHtml);
-        }
-
-        // 메모를 생성하는 메서드
-        function writePost() {
-            // 1. 작성한 메모를 불러온다
-            let contents = $('#contents').val();
-            // 2. 작성한 메모가 올바른지 isValidContents 함수를 통해 확인한다
-            if (isValidContents(contents) == false) {
-                return;
-            }
-            // 3. genRandomName 함수를 통해 익명의 username을 만든다
-            let user = genRandomName(10);
-            // 4. 전달할 data JSON으로 만든다
-            let data = {'user': user, 'contents': contents};
-            // 5. POST /api/memos 에 data를 전달합니다.
+        function memo() {
+            let content = $('#content').val();
             $.ajax({
-                type: "POST",
-                url: "/api/memos",
+                type: 'POST',
+                url: '/memo',
                 contentType: "application/json",
-                data: JSON.stringify(data),
+                data: JSON.stringify({'content': content}),
                 success: function (response) {
                     alert('저장된 메시지를 확인하시겠어요?');
-                    window.location.reload();
+                    readMemo();
                 }
-            });
+            })
         }
     </script>
+
 
 </head>
 
@@ -138,13 +92,13 @@
         <h1 class="display-4">Hello, weekly Test</h1>
         <p class="lead">이번주 문제는 매우 쉬워요!!</p>
         <hr class="my-4">
-        <p id="acticle"></p>
+        <p id="article"></p>
     </div>
     <div class="form-group">
         <label for="content">짧은 글 저장</label>
         <textarea class="form-control" id="content" rows="3"></textarea>
     </div>
-    <button type="button" class="btn btn-primary">Primary</button>
+    <button type="button" onclick="memo()" class="btn btn-primary">Primary</button>
 </div>
 </body>
 
