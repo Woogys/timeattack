@@ -16,8 +16,9 @@ public class ArticleController {
     private final ArticleService articleService;
 
     @PostMapping("/article")
-    public Article setArticle(@RequestBody ArticleRequestDto articleRequestDto){
-        return articleService.setArticle(articleRequestDto);
+    public Article setArticle(@RequestBody ArticleRequestDto articleRequestDto
+    @RequestPart(name = "postImg", required = false) MultipartFile multipartFile,){
+        return articleService.setArticle(articleRequestDto, multipartFile);
     }
 
     @GetMapping("/articles")

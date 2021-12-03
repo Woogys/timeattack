@@ -10,8 +10,10 @@ import com.sparta.weeklytestspring.repository.CommentRepository;
 import com.sparta.weeklytestspring.repository.TagRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.catalina.Store;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Arrays;
 import java.util.List;
@@ -26,7 +28,7 @@ public class ArticleService {
     private final TagRepository tagRepository;
 
     @Transactional
-    public Article setArticle(ArticleRequestDto articleRequestDto){
+    public Article setArticle(ArticleRequestDto articleRequestDto, MultipartFile multipartFile){
 
         Article article = new Article(articleRequestDto);
         articleRepository.save(article);
@@ -34,6 +36,15 @@ public class ArticleService {
         List<String> items = Arrays.asList(articleRequestDto.getTags().split("\\s*,\\s*"));
         List<Tag> tags = items.stream().map(tag -> new Tag(tag, article)).collect(Collectors.toList());
         tagRepository.saveAll(tags);
+
+        if (multipartFile == null) { // 처음 등록할 때 사진 선택하지 않으면 기본 이미지 저장
+            article.setPostImage("https://dk9q1cr2zzfmc.cloudfront.net/img/default.jpg");
+        } else { // 사진 선택하면 S3에 저장 + DB에 클라우드 프론트 url 저장
+            String reviewImgUrl = s3Manager.upload(multipartFile, "reviewImg"); // 클라우드 프론트 url
+            article.setPostImage(reviewImgUrl);
+        }
+       articleRepository.save(article);
+        return Article.ok(article);
 
         return article;
     }

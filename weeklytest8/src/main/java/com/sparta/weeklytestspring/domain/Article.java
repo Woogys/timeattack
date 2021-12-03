@@ -26,6 +26,9 @@ public class Article extends Timestamped {
     @Column(nullable = false)
     private String content;
 
+    @Column
+    private String postImage;
+
     @OneToMany(mappedBy="article")
     private List<Comment> comments;
 
