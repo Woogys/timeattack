@@ -7,6 +7,7 @@ import com.sparta.weeklytestspring.service.ArticleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -16,9 +17,8 @@ public class ArticleController {
     private final ArticleService articleService;
 
     @PostMapping("/article")
-    public Article setArticle(@RequestBody ArticleRequestDto articleRequestDto
-    @RequestPart(name = "postImg", required = false) MultipartFile multipartFile,){
-        return articleService.setArticle(articleRequestDto, multipartFile);
+    public Article setArticle(ArticleRequestDto articleRequestDto) throws IOException {
+        return articleService.setArticle(articleRequestDto);
     }
 
     @GetMapping("/articles")
@@ -33,7 +33,7 @@ public class ArticleController {
 
 
     @PostMapping("/article/comment")
-    public void  setArticleComment(@RequestBody ArticleCommentRequestDto articleCommentRequestDto){
+    public void setArticleComment(@RequestBody ArticleCommentRequestDto articleCommentRequestDto){
         articleService.setArticleComment(articleCommentRequestDto);
     }
 }

@@ -29,7 +29,5 @@ public class Comment extends Timestamped {
 
     public Comment(ArticleCommentRequestDto requestDto, Article article) {
         this.comment = requestDto.getComment();
-        this.article = article;
     }
-
 }
